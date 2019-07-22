@@ -14,8 +14,8 @@ const (
 )
 
 type MenuItem struct {
-	title   string
-	tooltip string
+	Title   string
+	Tooltip string
 }
 
 type SystrayPlugin struct {
@@ -47,15 +47,15 @@ func (p *SystrayPlugin) InitPlugin(m plugin.BinaryMessenger) error {
 		systray.SetTooltip(p.config.Tooltip)
 
 		for i, f := range p.menus {
-			menuItem := systray.AddMenuItem(i.title, i.tooltip)
+			menuItem := systray.AddMenuItem(i.Title, i.Tooltip)
 			go func() {
 				for {
 					select {
 					case <-menuItem.ClickedCh:
-						log.Println(i.title, "systray click")
+						log.Println(i.Title, "systray click")
 						err := f(p, messenger)
 						if err != nil {
-							log.Println(i.title, "systray err")
+							log.Println(i.Title, "systray err")
 						}
 					}
 				}
