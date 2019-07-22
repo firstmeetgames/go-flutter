@@ -21,7 +21,7 @@ type MenuItem struct {
 type SystrayPlugin struct {
 	systrayChannel *plugin.BasicMessageChannel
 	config         SystrayConfig
-	menus          map[MenuItem]func(p *SystrayPlugin, m *messenger) error
+	menus          map[MenuItem]func(p *SystrayPlugin, m plugin.BinaryMessenger) error
 }
 
 var systrayPlugin = &SystrayPlugin{}
@@ -92,7 +92,7 @@ type SystrayConfig struct {
 	Tooltip  string `json:"tooltip"`
 }
 
-func SystrayOption(sc SystrayConfig, menus map[MenuItem]func(p *SystrayPlugin, m *messenger) error) Option {
+func SystrayOption(sc SystrayConfig, menus map[MenuItem]func(p *SystrayPlugin, m plugin.BinaryMessenger) error) Option {
 	return func(c *config) {
 		for _, plugin := range c.plugins {
 			p, ok := plugin.(*SystrayPlugin)
