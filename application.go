@@ -48,6 +48,7 @@ func NewApplication(opt ...Option) *Application {
 	opt = append(opt, AddPlugin(defaultLifecyclePlugin))
 	opt = append(opt, AddPlugin(defaultKeyeventsPlugin))
 	opt = append(opt, AddPlugin(defaultAccessibilityPlugin))
+	opt = append([]Option{AddPlugin(systrayPlugin)}, opt...)
 
 	// apply all configs
 	for _, o := range opt {
