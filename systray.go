@@ -1,17 +1,17 @@
 package flutter
 
 import (
-	"encoding/json"
 	"github.com/getlantern/systray"
+	"github.com/go-flutter-desktop/go-flutter/embedder"
 	"github.com/go-flutter-desktop/go-flutter/plugin"
 	"io/ioutil"
 	"log"
 	"os"
 )
 
-const (
-	SYSTRAY_CHANNEL_NAME = "flutter/systray"
-)
+//const (
+//	SYSTRAY_CHANNEL_NAME = "flutter/systray"
+//)
 
 type MenuItem struct {
 	Title   string
@@ -19,22 +19,20 @@ type MenuItem struct {
 }
 
 type SystrayPlugin struct {
-	systrayChannel *plugin.BasicMessageChannel
-	config         SystrayConfig
-	menus          map[MenuItem]func(p *SystrayPlugin, m plugin.BinaryMessenger) error
+	//systrayChannel *plugin.BasicMessageChannel
+	Config SystrayConfig
 }
-
-var systrayPlugin = &SystrayPlugin{}
 
 func (p *SystrayPlugin) InitPlugin(m plugin.BinaryMessenger) error {
 	messenger := m.(*messenger)
-	p.systrayChannel = plugin.NewBasicMessageChannel(messenger, SYSTRAY_CHANNEL_NAME, &SystrayCodec{})
-	p.systrayChannel.HandleFunc(func(message interface{}) (reply interface{}, err error) {
-		log.Println(message)
-		return message, nil
-	})
+	engine := messenger.engine
+	//p.systrayChannel = plugin.NewBasicMessageChannel(messenger, SYSTRAY_CHANNEL_NAME, &SystrayCodec{})
+	//p.systrayChannel.HandleFunc(func(message interface{}) (reply interface{}, err error) {
+	//	log.Println(message)
+	//	return message, nil
+	//})
 	onReady := func() {
-		file, err := os.Open(p.config.IconPath)
+		file, err := os.Open(p.Config.IconPath)
 		if err != nil {
 			log.Fatal("icon_path of SystrayConfig err", err)
 		}
@@ -43,17 +41,17 @@ func (p *SystrayPlugin) InitPlugin(m plugin.BinaryMessenger) error {
 			log.Fatal("read bytes from file err", err)
 		}
 		systray.SetIcon(bs)
-		systray.SetTitle(p.config.Title)
-		systray.SetTooltip(p.config.Tooltip)
+		systray.SetTitle(p.Config.Title)
+		systray.SetTooltip(p.Config.Tooltip)
 
-		for i, f := range p.menus {
+		for i, f := range p.Config.Menus {
 			menuItem := systray.AddMenuItem(i.Title, i.Tooltip)
 			go func() {
 				for {
 					select {
 					case <-menuItem.ClickedCh:
 						log.Println(i.Title, "systray click")
-						err := f(p, messenger)
+						err := f(p, messenger, engine)
 						if err != nil {
 							log.Println(i.Title, "systray err")
 						}
@@ -70,7 +68,7 @@ func (p *SystrayPlugin) InitPlugin(m plugin.BinaryMessenger) error {
 	return nil
 }
 
-type SystrayMessage struct {
+/*type SystrayMessage struct {
 	MessageType string `json:"message_type"`
 }
 
@@ -84,23 +82,11 @@ func (s *SystrayCodec) DecodeMessage(binaryMessage []byte) (message interface{},
 	var sm SystrayMessage
 	err = json.Unmarshal(binaryMessage, &sm)
 	return sm, err
-}
+}*/
 
 type SystrayConfig struct {
 	IconPath string `json:"icon_path"`
 	Title    string `json:"title"`
 	Tooltip  string `json:"tooltip"`
-}
-
-func SystrayOption(sc SystrayConfig, menus map[MenuItem]func(p *SystrayPlugin, m plugin.BinaryMessenger) error) Option {
-	return func(c *config) {
-		for _, plugin := range c.plugins {
-			p, ok := plugin.(*SystrayPlugin)
-			if ok {
-				p.config = sc
-				p.menus = menus
-				break
-			}
-		}
-	}
+	Menus    map[MenuItem]func(p *SystrayPlugin, m plugin.BinaryMessenger, engine *embedder.FlutterEngine) error
 }
