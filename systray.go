@@ -84,6 +84,7 @@ type SystrayCodec struct {
 func (s *SystrayCodec) EncodeMessage(message interface{}) (binaryMessage []byte, err error) {
 	return json.Marshal(message)
 }
+
 func (s *SystrayCodec) DecodeMessage(binaryMessage []byte) (message interface{}, err error) {
 	var sm SystrayMessage
 	err = json.Unmarshal(binaryMessage, &sm)
